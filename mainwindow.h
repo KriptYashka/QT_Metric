@@ -16,15 +16,16 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    QStandardItemModel *csvModel;
 
 private slots:
-    int read_csv_file(QString path);
-
     void on_btn_load_clicked();
     void on_btn_loadfile_clicked();
 
+    void on_btn_metric_clicked();
+
 private:
     Ui::MainWindow *ui;
-    QStandardItemModel *csvModel;
+
 };
 #endif // MAINWINDOW_H
