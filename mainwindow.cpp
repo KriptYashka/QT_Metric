@@ -33,13 +33,14 @@ int MainWindow::read_csv_file(QString path){
     }
 
     QTextStream in(&file);
-    //Reads the data up to the end of file
-    while (!in.atEnd()){
+    if (!in.atEnd()){
         QString line = in.readLine();
-        // Adding to the model in line with the elements
+    }
+    while (!in.atEnd()){
+        // Считывание из файла и перенос в таблицу
+        QString line = in.readLine();
         QList<QStandardItem *> standardItemsList;
-        // consider that the line separated by semicolons into columns
-        for (QString item : line.split(";")) {
+        for (QString item : line.split(",")) {
             standardItemsList.append(new QStandardItem(item));
         }
         csvModel->insertRow(csvModel->rowCount(), standardItemsList);
@@ -50,12 +51,12 @@ int MainWindow::read_csv_file(QString path){
 
 void MainWindow::on_btn_loadfile_clicked(){
     QString filePath = QFileDialog::getOpenFileName(this, tr("Open file"));
-    if (read_csv_file(filePath);
-
-    ui->label_region->setText("");
-    ui->label_col->setText("");
-
-    ui->table_metric->clearSpans();
+    if (!read_csv_file(filePath)){
+        ui->label_region->setText("");
+        ui->label_col->setText("");
+        ui->table_metric->clearSpans();
+        return;
+    }
 }
 
 
