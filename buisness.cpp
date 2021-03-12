@@ -9,6 +9,10 @@ void calc_metric(std::vector<double> arr, int col_metric, double* min, double* m
     if (arr.size() != 0){
         *min = arr[0];
         *max = arr[arr.size() - 1];
-        *avg = arr[arr.size() / 2];
+        if (arr.size() % 2 == 0){
+            *avg = (arr[arr.size() / 2] + arr[arr.size() / 2 - 1]) / 2.0;
+        } else {
+            *avg = arr[arr.size() / 2];
+        }
     }
 }

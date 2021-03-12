@@ -116,11 +116,11 @@ void MainWindow::on_btn_metric_clicked(){
     QString region = ui->line_region->text();
     QString column = ui->line_col->text();
     int col_metric = check_column(column);
-    if (col_metric == -1 || col_metric > csvModel->rowCount() || col_metric < 1){
+    if (col_metric == -1 || col_metric > csvModel->columnCount() || col_metric < 1){
         ui->label_result->setText("Переданы некорректные значения");
         return;
     }
-    col_metric++;
+    col_metric--;
 
     double minimum = 0;
     double maximum = 0;
