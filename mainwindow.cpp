@@ -116,10 +116,11 @@ void MainWindow::on_btn_metric_clicked(){
     QString region = ui->line_region->text();
     QString column = ui->line_col->text();
     int col_metric = check_column(column);
-    if (col_metric == -1 || col_metric > csvModel->rowCount()){
+    if (col_metric == -1 || col_metric > csvModel->rowCount() || col_metric < 1){
         ui->label_result->setText("Переданы некорректные значения");
         return;
     }
+    col_metric++;
 
     double minimum = 0;
     double maximum = 0;
@@ -147,7 +148,8 @@ void MainWindow::on_btn_metric_clicked(){
     std::vector<double> arr;
     // Просчет метрик
     for (int row = 0; row < general_model->rowCount(); ++row){
-        if (is_normal_metric(general_model->item(row, col_metric)->text())){
+        QString str = general_model->item(row, col_metric)->text();
+        if (is_normal_metric(str)){
             arr.push_back(general_model->item(row, col_metric)->text().toDouble());
         }
     }
