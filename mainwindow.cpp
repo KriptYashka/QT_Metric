@@ -86,7 +86,7 @@ void MainWindow::on_btn_loadfile_clicked(){
 
 
 void MainWindow::on_btn_load_clicked(){
-    ui->table_metric->setModel(general_model);
+    ui->table_metric->setModel(csvModel);
 }
 
 int check_column(QString col){
@@ -97,8 +97,7 @@ int check_column(QString col){
     return -1;
 }
 
-void MainWindow::on_btn_metric_clicked()
-{
+void MainWindow::on_btn_metric_clicked(){
     QString region = ui->line_region->text();
     QString column = ui->line_col->text();
     int col = check_column(column);
@@ -107,20 +106,24 @@ void MainWindow::on_btn_metric_clicked()
         return;
     }
 
-    /*general_model->clear();
+    general_model->clear();
     general_model->setColumnCount(7);
     general_model->setHorizontalHeaderLabels(QStringList() << "Year" << "Region" << "Natural growth" << "Birth rate" << "Death rate"
-                                        << "General dem. weight" << "Urbanization");*/
-    general_model = new QStandardItemModel(csvModel);
-    /*double minimum = 0;
+                                        << "General dem. weight" << "Urbanization");
+    double minimum = 0;
     double maximum = 0;
-    double average = 0;*/
+    double average = 0;
+
     // Выборка нужных записей
-    /*for (int row = 0; row < csvModel->rowCount(); ++row){
+    for (int row = 0; row < csvModel->rowCount(); ++row){
         if ((csvModel->item(row, 1)->text() == region || region == "")){
-            general_model->takeRow(row);
+            QList<QStandardItem *> res;
+            for (int i = 0; i < csvModel->columnCount(); ++i){
+                res.append(new QStandardItem(csvModel->item(row, i)->text()));
+            }
+            general_model->insertRow(general_model->rowCount(), res);
         }
-    }*/
+    }
     ui->table_metric->setModel(general_model);
 }
 
