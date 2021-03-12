@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "buisness.h"
 
 #include <QFile>
 #include <QTextStream>
@@ -78,9 +79,12 @@ void MainWindow::on_btn_loadfile_clicked(){
     int cod = read_csv_file(filePath, csvModel);
     model_cpy(csvModel, general_model);
     if (cod == 0){
+        ui->label_title->setText("Нет таблицы");
         ui->label_result->setText("Не возможно открыть файл");
         ui->line_region->setText("");
         ui->line_col->setText("");
+    } else {
+        ui->label_title->setText(filePath);
     }
 }
 
@@ -97,22 +101,35 @@ int check_column(QString col){
     return -1;
 }
 
+bool is_normal_metric(QString text){
+    if (text == "")
+        return false;
+    for (int i = 0; i < text.length(); ++i){
+        if (!text[i].isDigit() && (text[i] != '-' && text[i] != '.')){
+            return false;
+        }
+    }
+    return true;
+}
+
 void MainWindow::on_btn_metric_clicked(){
     QString region = ui->line_region->text();
     QString column = ui->line_col->text();
-    int col = check_column(column);
-    if (col == -1 || col > csvModel->rowCount()){
+    int col_metric = check_column(column);
+    if (col_metric == -1 || col_metric > csvModel->rowCount()){
         ui->label_result->setText("Переданы некорректные значения");
         return;
     }
+
+    double minimum = 0;
+    double maximum = 0;
+    double average = 0;
 
     general_model->clear();
     general_model->setColumnCount(7);
     general_model->setHorizontalHeaderLabels(QStringList() << "Year" << "Region" << "Natural growth" << "Birth rate" << "Death rate"
                                         << "General dem. weight" << "Urbanization");
-    double minimum = 0;
-    double maximum = 0;
-    double average = 0;
+
 
     // Выборка нужных записей
     for (int row = 0; row < csvModel->rowCount(); ++row){
@@ -124,17 +141,19 @@ void MainWindow::on_btn_metric_clicked(){
             general_model->insertRow(general_model->rowCount(), res);
         }
     }
+
     ui->table_metric->setModel(general_model);
+
+    std::vector<double> arr;
+    // Просчет метрик
+    for (int row = 0; row < general_model->rowCount(); ++row){
+        if (is_normal_metric(general_model->item(row, col_metric)->text())){
+            arr.push_back(general_model->item(row, col_metric)->text().toDouble());
+        }
+    }
+
+    calc_metric(arr, col_metric, &minimum, &maximum, &average);
+    QString result_text = "Минимум: "+ QString::number(minimum) +"\nМаксимум: "+ QString::number(maximum)
+            +"\nМедиана: "+ QString::number(average);
+    ui->label_result->setText(result_text);
 }
-
-
-
-
-
-
-
-
-
-
-
-
