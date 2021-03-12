@@ -23,6 +23,25 @@ MainWindow::~MainWindow(){
 QStandardItemModel *general_model = new QStandardItemModel;
 QVector<QString> col_names;
 
+QList<QStandardItem *> get_row(QStandardItemModel* model, int row){
+    QList<QStandardItem *> res;
+    for (int i = 0; i < model->columnCount(); ++i){
+        res.append(model->item(row, i));
+    }
+    return res;
+}
+
+void model_cpy(QStandardItemModel* from, QStandardItemModel* to){
+   to->clear();
+   for (int row = 0 ; row < from->rowCount() ; row++){
+       QList<QStandardItem *> res;
+       for (int i = 0; i < from->columnCount(); ++i){
+           res.append(new QStandardItem(from->item(row, i)->text()));
+       }
+      to->appendRow(res);
+   }
+}
+
 int read_csv_file(QString path, QStandardItemModel* model){
     /* Считывает данные из файла и записывает в модель
     Возвращает код ошибки*/
@@ -57,7 +76,7 @@ int read_csv_file(QString path, QStandardItemModel* model){
 void MainWindow::on_btn_loadfile_clicked(){
     QString filePath = QFileDialog::getOpenFileName(this, tr("Open file"));
     int cod = read_csv_file(filePath, csvModel);
-    general_model = new QStandardItemModel(csvModel);
+    model_cpy(csvModel, general_model);
     if (cod == 0){
         ui->label_result->setText("Не возможно открыть файл");
         ui->line_region->setText("");
@@ -67,7 +86,7 @@ void MainWindow::on_btn_loadfile_clicked(){
 
 
 void MainWindow::on_btn_load_clicked(){
-    ui->table_metric->setModel(csvModel);
+    ui->table_metric->setModel(general_model);
 }
 
 int check_column(QString col){
@@ -76,14 +95,6 @@ int check_column(QString col){
     if (flag)
         return res;
     return -1;
-}
-
-QList<QStandardItem *> get_row(QStandardItemModel* model, int row){
-    QList<QStandardItem *> res;
-    for (int i = 0; i < model->columnCount(); ++i){
-        res.append(model->item(row, i));
-    }
-    return res;
 }
 
 void MainWindow::on_btn_metric_clicked()
@@ -96,22 +107,31 @@ void MainWindow::on_btn_metric_clicked()
         return;
     }
 
-    general_model->clear();
+    /*general_model->clear();
     general_model->setColumnCount(7);
     general_model->setHorizontalHeaderLabels(QStringList() << "Year" << "Region" << "Natural growth" << "Birth rate" << "Death rate"
-                                        << "General dem. weight" << "Urbanization");
-    double minimum = 0;
+                                        << "General dem. weight" << "Urbanization");*/
+    general_model = new QStandardItemModel(csvModel);
+    /*double minimum = 0;
     double maximum = 0;
-    double average = 0;
+    double average = 0;*/
     // Выборка нужных записей
-    for (int row = 0; row < csvModel->rowCount(); ++row){
-        if (csvModel->item(row, 1)->text() == region || region == ""){
-            QList<QStandardItem *> res;
-            for (int i = 0; i < csvModel->columnCount(); ++i){
-                res.append(csvModel->item(row, i));
-            }
-            general_model->insertRow(general_model->rowCount(), res);
+    /*for (int row = 0; row < csvModel->rowCount(); ++row){
+        if ((csvModel->item(row, 1)->text() == region || region == "")){
+            general_model->takeRow(row);
         }
-    }
+    }*/
     ui->table_metric->setModel(general_model);
 }
+
+
+
+
+
+
+
+
+
+
+
+
