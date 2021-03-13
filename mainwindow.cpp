@@ -15,16 +15,32 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
     csvModel->setColumnCount(7);
     csvModel->setHorizontalHeaderLabels(QStringList() << "Year" << "Region" << "Natural growth" << "Birth rate" << "Death rate"
                                         << "General dem. weight" << "Urbanization");
+
+    keyEnter = new QShortcut(this);   // Инициализируем объект
+    keyEnter->setKey(Qt::Key_Enter);    // Устанавливаем код клавиши
+//    // цепляем обработчик нажатия клавиши
+    connect(keyEnter, SIGNAL(activated()), this, SLOT(on_btn_metric_clicked()));
+
+    keyEsc = new QShortcut(this);   // Инициализируем объект
+    keyEsc->setKey(Qt::Key_Escape);    // Устанавливаем код клавиши
+//    // цепляем обработчик нажатия клавиши
+    connect(keyEsc, SIGNAL(activated()), this, SLOT(closeApp()));
 }
 
 MainWindow::~MainWindow(){
     delete ui;
 }
+
 /* Глобальные переменные */
 QStandardItemModel *general_model = new QStandardItemModel;
 QVector<QString> col_names;
 
+void MainWindow::closeApp(){
+    QApplication::exit();
+}
+
 QList<QStandardItem *> get_row(QStandardItemModel* model, int row){
+    /* Возвращает QList из ячеек таблицы */
     QList<QStandardItem *> res;
     for (int i = 0; i < model->columnCount(); ++i){
         res.append(model->item(row, i));
@@ -33,14 +49,15 @@ QList<QStandardItem *> get_row(QStandardItemModel* model, int row){
 }
 
 void model_cpy(QStandardItemModel* from, QStandardItemModel* to){
-   to->clear();
-   for (int row = 0 ; row < from->rowCount() ; row++){
-       QList<QStandardItem *> res;
-       for (int i = 0; i < from->columnCount(); ++i){
-           res.append(new QStandardItem(from->item(row, i)->text()));
-       }
-      to->appendRow(res);
-   }
+    /* Копирует данные из одной модели в другую */
+    to->clear();
+    for (int row = 0 ; row < from->rowCount() ; row++){
+        QList<QStandardItem *> res;
+        for (int i = 0; i < from->columnCount(); ++i){
+            res.append(new QStandardItem(from->item(row, i)->text()));
+        }
+       to->appendRow(res);
+    }
 }
 
 int read_csv_file(QString path, QStandardItemModel* model){
@@ -75,6 +92,7 @@ int read_csv_file(QString path, QStandardItemModel* model){
 }
 
 void MainWindow::on_btn_loadfile_clicked(){
+    /* Загрузка файла */
     QString filePath = QFileDialog::getOpenFileName(this, tr("Open file"));
     int cod = read_csv_file(filePath, csvModel);
     model_cpy(csvModel, general_model);
@@ -94,6 +112,7 @@ void MainWindow::on_btn_load_clicked(){
 }
 
 int check_column(QString col){
+    /* Проверяет колонку на целочисленный формат */
     bool flag = true;
     int res = col.toInt(&flag);
     if (flag)
@@ -102,6 +121,7 @@ int check_column(QString col){
 }
 
 bool is_normal_metric(QString text){
+    /* Проверяет метрику на числовой формат */
     if (text == "")
         return false;
     for (int i = 0; i < text.length(); ++i){
@@ -113,6 +133,7 @@ bool is_normal_metric(QString text){
 }
 
 void MainWindow::on_btn_metric_clicked(){
+    /* Поиск нужный метрик и их вычисление */
     QString region = ui->line_region->text();
     QString column = ui->line_col->text();
     int col_metric = check_column(column);
