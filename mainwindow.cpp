@@ -117,7 +117,7 @@ void MainWindow::on_btn_metric_clicked(){
     QString column = ui->line_col->text();
     int col_metric = check_column(column);
     if (col_metric == -1 || col_metric > csvModel->columnCount() || col_metric < 1){
-        ui->label_result->setText("Переданы некорректные значения");
+        ui->label_result->setText("Переданы некорректные значение колонки.\nКолонка должна быть в диапозоне от 1 до 7.");
         return;
     }
     col_metric--;
@@ -130,7 +130,6 @@ void MainWindow::on_btn_metric_clicked(){
     general_model->setColumnCount(7);
     general_model->setHorizontalHeaderLabels(QStringList() << "Year" << "Region" << "Natural growth" << "Birth rate" << "Death rate"
                                         << "General dem. weight" << "Urbanization");
-
 
     // Выборка нужных записей
     for (int row = 0; row < csvModel->rowCount(); ++row){
@@ -157,5 +156,8 @@ void MainWindow::on_btn_metric_clicked(){
     calc_metric(arr, col_metric, &minimum, &maximum, &average);
     QString result_text = "Минимум: "+ QString::number(minimum) +"\nМаксимум: "+ QString::number(maximum)
             +"\nМедиана: "+ QString::number(average);
+    if (arr.size() == 0){
+        result_text = "Нет результатов. Проверьте название региона или выбранную колонку.";
+    }
     ui->label_result->setText(result_text);
 }
