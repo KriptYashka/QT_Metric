@@ -16,14 +16,12 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
     csvModel->setHorizontalHeaderLabels(QStringList() << "Year" << "Region" << "Natural growth" << "Birth rate" << "Death rate"
                                         << "General dem. weight" << "Urbanization");
 
-    keyEnter = new QShortcut(this);   // Инициализируем объект
-    keyEnter->setKey(Qt::Key_Enter);    // Устанавливаем код клавиши
-//    // цепляем обработчик нажатия клавиши
+    keyEnter = new QShortcut(this);
+    keyEnter->setKey(Qt::Key_Enter);
     connect(keyEnter, SIGNAL(activated()), this, SLOT(on_btn_metric_clicked()));
 
-    keyEsc = new QShortcut(this);   // Инициализируем объект
-    keyEsc->setKey(Qt::Key_Escape);    // Устанавливаем код клавиши
-//    // цепляем обработчик нажатия клавиши
+    keyEsc = new QShortcut(this);
+    keyEsc->setKey(Qt::Key_Escape);
     connect(keyEsc, SIGNAL(activated()), this, SLOT(closeApp()));
 }
 
@@ -34,6 +32,7 @@ MainWindow::~MainWindow(){
 /* Глобальные переменные */
 QStandardItemModel *general_model = new QStandardItemModel;
 QVector<QString> col_names;
+QStringList headers;
 
 void MainWindow::closeApp(){
     QApplication::exit();
@@ -71,12 +70,13 @@ int read_csv_file(QString path, QStandardItemModel* model){
 
     model->clear();
     model->setColumnCount(7);
-    model->setHorizontalHeaderLabels(QStringList() << "Year" << "Region" << "Natural growth" << "Birth rate" << "Death rate"
-                                        << "General dem. weight" << "Urbanization");
+
 
     QTextStream in(&file);
     if (!in.atEnd()){
         QString line = in.readLine();
+        headers = line.split(",");
+        model->setHorizontalHeaderLabels(headers);
     }
     while (!in.atEnd()){
         // Считывание из файла и перенос в таблицу
@@ -149,8 +149,7 @@ void MainWindow::on_btn_metric_clicked(){
 
     general_model->clear();
     general_model->setColumnCount(7);
-    general_model->setHorizontalHeaderLabels(QStringList() << "Year" << "Region" << "Natural growth" << "Birth rate" << "Death rate"
-                                        << "General dem. weight" << "Urbanization");
+    general_model->setHorizontalHeaderLabels(headers);
 
     // Выборка нужных записей
     for (int row = 0; row < csvModel->rowCount(); ++row){
