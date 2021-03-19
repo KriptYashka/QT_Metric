@@ -13,8 +13,6 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWin
 
     csvModel = new QStandardItemModel(this);
     csvModel->setColumnCount(7);
-    csvModel->setHorizontalHeaderLabels(QStringList() << "Year" << "Region" << "Natural growth" << "Birth rate" << "Death rate"
-                                        << "General dem. weight" << "Urbanization");
 
     keyEnter = new QShortcut(this);
     keyEnter->setKey(Qt::Key_Enter);
@@ -31,7 +29,6 @@ MainWindow::~MainWindow(){
 
 /* Глобальные переменные */
 QStandardItemModel *general_model = new QStandardItemModel;
-QVector<QString> col_names;
 QStringList headers;
 
 void MainWindow::closeApp(){
@@ -64,13 +61,12 @@ int read_csv_file(QString path, QStandardItemModel* model){
     Возвращает код ошибки*/
     std::ifstream file_csv(path.toStdString());
     QFile file(path);
-    if (!file.open(QFile::ReadOnly | QFile::Text)){
+    if (!file.open(QFile::ReadOnly | QFile::Text) || !(path.contains(".csv"))){
         return 0;
     }
 
     model->clear();
     model->setColumnCount(7);
-
 
     QTextStream in(&file);
     if (!in.atEnd()){
@@ -98,7 +94,7 @@ void MainWindow::on_btn_loadfile_clicked(){
     model_cpy(csvModel, general_model);
     if (cod == 0){
         ui->label_title->setText("Нет таблицы");
-        ui->label_result->setText("Не возможно открыть файл");
+        ui->label_result->setText("Невозможно открыть файл");
         ui->line_region->setText("");
         ui->line_col->setText("");
     } else {
@@ -118,18 +114,6 @@ int check_column(QString col){
     if (flag)
         return res;
     return -1;
-}
-
-bool is_normal_metric(QString text){
-    /* Проверяет метрику на числовой формат */
-    if (text == "")
-        return false;
-    for (int i = 0; i < text.length(); ++i){
-        if (!text[i].isDigit() && (text[i] != '-' && text[i] != '.')){
-            return false;
-        }
-    }
-    return true;
 }
 
 void MainWindow::on_btn_metric_clicked(){
@@ -168,7 +152,7 @@ void MainWindow::on_btn_metric_clicked(){
     // Просчет метрик
     for (int row = 0; row < general_model->rowCount(); ++row){
         QString str = general_model->item(row, col_metric)->text();
-        if (is_normal_metric(str)){
+        if (is_normal_metric(str.toStdString())){
             arr.push_back(general_model->item(row, col_metric)->text().toDouble());
         }
     }
