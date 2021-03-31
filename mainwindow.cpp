@@ -56,51 +56,44 @@ void model_cpy(QStandardItemModel* from, QStandardItemModel* to){
     }
 }
 
-//int read_csv_file(QString path, QStandardItemModel* model){
-//    /* Считывает данные из файла и записывает в модель
-//    Возвращает код ошибки*/
-//    std::ifstream file_csv(path.toStdString());
-//    QFile file(path);
-//    if (!file.open(QFile::ReadOnly | QFile::Text) || !(path.contains(".csv"))){
-//        return 0;
-//    }
-
-//    model->clear();
-//    model->setColumnCount(7);
-
-//    QTextStream in(&file);
-//    if (!in.atEnd()){
-//        QString line = in.readLine();
-//        headers = line.split(",");
-//        model->setHorizontalHeaderLabels(headers);
-//    }
-//    while (!in.atEnd()){
-//        // Считывание из файла и перенос в таблицу
-//        QString line = in.readLine();
-//        QList<QStandardItem *> standardItemsList;
-//        for (QString item : line.split(",")) {
-//            standardItemsList.append(new QStandardItem(item));
-//        }
-//        model->insertRow(model->rowCount(), standardItemsList);
-//    }
-//    file.close();
-//    return 1;
-//}
-
 void MainWindow::on_btn_loadfile_clicked(){
     /* Загрузка файла */
     QString filePath = QFileDialog::getOpenFileName(this, tr("Open file"));
-//    int cod = read_csv_file(filePath, csvModel);
     vector<vector<string>> csv_read = read_csv_file(filePath.toStdString());
-    model_cpy(csvModel, general_model);
-//    if (cod == 0){
-//        ui->label_title->setText("Нет таблицы");
-//        ui->label_result->setText("Невозможно открыть файл");
-//        ui->line_region->setText("");
-//        ui->line_col->setText("");
-//    } else {
-//        ui->label_title->setText(filePath);
-//    }
+
+    if (csv_read.size() == 0){
+        ui->label_title->setText("Нет таблицы");
+        ui->label_result->setText("Невозможно открыть файл");
+        ui->line_region->setText("");
+        ui->line_col->setText("");
+    } else {
+        // Устанавливаем CSV модель
+
+        csvModel->clear();
+        csvModel->setColumnCount(csv_read.at(0).size());
+        // Устанавливаем заголовки
+        headers.clear();
+        for (string str : csv_read.at(0)) {
+          headers.push_back(QString::fromStdString(str));
+        }
+        csvModel->setHorizontalHeaderLabels(headers);
+
+        bool is_header = true;
+        for (vector<string> item_list : csv_read) {
+            if (is_header){ // Пропускаем заголовки
+                is_header = false;
+                continue;
+            }
+            QList<QStandardItem *> standardItemsList;
+            for (string item_str : item_list){
+                QString q_item_str = QString::fromStdString(item_str);
+                standardItemsList.append(new QStandardItem(q_item_str));
+            }
+            csvModel->insertRow(csvModel->rowCount(), standardItemsList);
+        }
+        model_cpy(csvModel, general_model);
+        ui->label_title->setText(filePath);
+    }
 }
 
 
