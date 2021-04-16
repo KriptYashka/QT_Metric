@@ -10,17 +10,6 @@
 
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent), ui(new Ui::MainWindow){
     ui->setupUi(this);
-
-    csvModel = new QStandardItemModel(this);
-    csvModel->setColumnCount(7);
-
-    keyEnter = new QShortcut(this);
-    keyEnter->setKey(Qt::Key_Enter);
-    connect(keyEnter, SIGNAL(activated()), this, SLOT(on_btn_metric_clicked()));
-
-    keyEsc = new QShortcut(this);
-    keyEsc->setKey(Qt::Key_Escape);
-    connect(keyEsc, SIGNAL(activated()), this, SLOT(closeApp()));
 }
 
 MainWindow::~MainWindow(){
@@ -28,20 +17,12 @@ MainWindow::~MainWindow(){
 }
 
 /* Глобальные переменные */
-QStandardItemModel *general_model = new QStandardItemModel;
+QStandardItemModel *view_model = new QStandardItemModel;
+QStandardItemModel *csv_model = new QStandardItemModel;
 QStringList headers;
 
 void MainWindow::closeApp(){
     QApplication::exit();
-}
-
-QList<QStandardItem *> get_row(QStandardItemModel* model, int row){
-    /* Возвращает QList из ячеек таблицы */
-    QList<QStandardItem *> res;
-    for (int i = 0; i < model->columnCount(); ++i){
-        res.append(model->item(row, i));
-    }
-    return res;
 }
 
 void model_cpy(QStandardItemModel* from, QStandardItemModel* to){
@@ -56,67 +37,56 @@ void model_cpy(QStandardItemModel* from, QStandardItemModel* to){
     }
 }
 
-void MainWindow::on_btn_loadfile_clicked(){
-    /* Загрузка файла */
+void MainWindow::on_inputPath_clicked(){
     QString filePath = QFileDialog::getOpenFileName(this, tr("Open file"));
-    vector<vector<string>> csv_read = read_csv_file(filePath.toStdString());
+    vector<vector<string>> all_lines = read_csv_file(filePath.toStdString());
 
-    if (csv_read.size() == 0){
-        ui->label_title->setText("Нет таблицы");
-        ui->label_result->setText("Невозможно открыть файл");
-        ui->line_region->setText("");
-        ui->line_col->setText("");
+    if (all_lines.size() == 0){
+        ui->Result_metrics->setText("Невозможно открыть файл");
+        ui->Input_Region->setText("");
+        ui->Input_number->setText("");
     } else {
         // Устанавливаем CSV модель
 
-        csvModel->clear();
-        csvModel->setColumnCount(csv_read.at(0).size());
+        csv_model->clear();
+        csv_model->setColumnCount(all_lines.at(0).size());
         // Устанавливаем заголовки
         headers.clear();
-        for (string str : csv_read.at(0)) {
-          headers.push_back(QString::fromStdString(str));
+        for (int i = 0; i < all_lines.at(0).size(); i++) {
+            headers.push_back(QString::fromStdString(all_lines.at(0).at(i)));
         }
-        csvModel->setHorizontalHeaderLabels(headers);
-
-        bool is_header = true;
-        for (vector<string> item_list : csv_read) {
-            if (is_header){ // Пропускаем заголовки
-                is_header = false;
-                continue;
-            }
+        csv_model->setHorizontalHeaderLabels(headers);
+        for (int i = 1; i < all_lines.size(); i++) {
+            vector<string> item_list = all_lines.at(i);
             QList<QStandardItem *> standardItemsList;
-            for (string item_str : item_list){
+            for (string item_str : item_list){ // перебираем все элементы из массива
                 QString q_item_str = QString::fromStdString(item_str);
                 standardItemsList.append(new QStandardItem(q_item_str));
             }
-            csvModel->insertRow(csvModel->rowCount(), standardItemsList);
+            csv_model->insertRow(csv_model->rowCount(), standardItemsList);
         }
-        model_cpy(csvModel, general_model);
-        ui->label_title->setText(filePath);
+        model_cpy(csv_model, view_model);
     }
 }
 
 
-void MainWindow::on_btn_load_clicked(){
-    ui->table_metric->setModel(csvModel);
+void MainWindow::on_LoadData_button_clicked(){
+    ui->tableInformation->setModel(csv_model);
 }
 
-int check_column(QString col){
-    /* Проверяет колонку на целочисленный формат */
-    bool flag = true;
-    int res = col.toInt(&flag);
-    if (flag)
-        return res;
-    return -1;
-}
 
-void MainWindow::on_btn_metric_clicked(){
+void MainWindow::on_Calculate_metrics_clicked(){
     /* Поиск нужный метрик и их вычисление */
-    QString region = ui->line_region->text();
-    QString column = ui->line_col->text();
-    int col_metric = check_column(column);
-    if (col_metric == -1 || col_metric > csvModel->columnCount() || col_metric < 1){
-        ui->label_result->setText("Переданы некорректные значение колонки.\nКолонка должна быть в диапозоне от 1 до 7.");
+    QString region = ui->Input_Region->text();
+    QString column = ui->Input_number->text();
+    bool flag;
+    int res = column.toInt(&flag);
+    int col_metric = -1;
+    if (flag)
+        col_metric = column.toInt();
+
+    if (col_metric == -1 || col_metric > csv_model->columnCount() || col_metric < 1){
+        ui->Result_metrics->setText("Переданы некорректные значение колонки.\nКолонка должна быть в диапозоне от 1 до 7.");
         return;
     }
     col_metric--;
@@ -125,37 +95,37 @@ void MainWindow::on_btn_metric_clicked(){
     double maximum = 0;
     double average = 0;
 
-    general_model->clear();
-    general_model->setColumnCount(7);
-    general_model->setHorizontalHeaderLabels(headers);
+    view_model->clear();
+    view_model->setColumnCount(7);
+    view_model->setHorizontalHeaderLabels(headers);
 
     // Выборка нужных записей
-    for (int row = 0; row < csvModel->rowCount(); ++row){
-        if ((csvModel->item(row, 1)->text() == region || region == "")){
+    for (int row = 0; row < csv_model->rowCount(); ++row){
+        if ((csv_model->item(row, 1)->text() == region || region == "")){
             QList<QStandardItem *> res;
-            for (int i = 0; i < csvModel->columnCount(); ++i){
-                res.append(new QStandardItem(csvModel->item(row, i)->text()));
+            for (int i = 0; i < csv_model->columnCount(); ++i){
+                res.append(new QStandardItem(csv_model->item(row, i)->text()));
             }
-            general_model->insertRow(general_model->rowCount(), res);
+            view_model->insertRow(view_model->rowCount(), res);
         }
     }
 
-    ui->table_metric->setModel(general_model);
+    ui->tableInformation->setModel(view_model);
 
-    std::vector<double> arr;
+    vector<double> metric_column;
     // Просчет метрик
-    for (int row = 0; row < general_model->rowCount(); ++row){
-        QString str = general_model->item(row, col_metric)->text();
+    for (int row = 0; row < view_model->rowCount(); ++row){
+        QString str = view_model->item(row, col_metric)->text();
         if (is_normal_metric(str.toStdString())){
-            arr.push_back(general_model->item(row, col_metric)->text().toDouble());
+            metric_column.push_back(view_model->item(row, col_metric)->text().toDouble());
         }
     }
 
-    calc_metric(arr, col_metric, &minimum, &maximum, &average);
+    calculate(metric_column, minimum, maximum, average);
     QString result_text = "Минимум: "+ QString::number(minimum) +"\nМаксимум: "+ QString::number(maximum)
             +"\nМедиана: "+ QString::number(average);
-    if (arr.size() == 0){
+    if (metric_column.size() == 0){
         result_text = "Нет результатов. Проверьте название региона или выбранную колонку.";
     }
-    ui->label_result->setText(result_text);
+    ui->Result_metrics->setText(result_text);
 }

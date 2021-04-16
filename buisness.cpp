@@ -1,45 +1,32 @@
 #include "buisness.h"
 using namespace std;
 
-bool is_digit(char c){
-    if (c == '1' || c == '2' || c == '3' || c == '4' || c == '5' || c == '6' || c == '7' || c == '8' || c == '9' || c == '0')
-        return true;
-    return false;
-}
-
 bool is_normal_metric(string text){
-    /* Проверяет метрику на числовой формат */
+    bool flag = true;
     if (text == "")
-        return false;
+        flag = false;;
     for (int i = 0; i < text.length(); ++i){
-        if (!is_digit(text[i]) && (text[i] != '-' && text[i] != '.')){
-            return false;
+        if (!isdigit(text[i]) && (text[i] != '-' && text[i] != '.')){
+            flag = false;
         }
     }
-    return true;
+    return flag;
 }
 
-void calc_metric(vector<double> arr, int col_metric, double* min, double* max, double* avg){
+void calculate(vector<double> arr, double& min, double& max, double& med){
     sort(arr.begin(), arr.end());
-    *min = 0;
-    *max = 0;
-    *avg = 0;
+    min = 0;
+    max = 0;
+    med = 0;
     if (arr.size() != 0){
-        *min = arr[0];
-        *max = arr[arr.size() - 1];
-        if (arr.size() % 2 == 0){
-            *avg = (arr[arr.size() / 2] + arr[arr.size() / 2 - 1]) / 2.0;
+        min = arr[0];
+        max = arr[arr.size() - 1];
+        if (arr.size() % 2){
+            med = arr[arr.size() / 2];
         } else {
-            *avg = arr[arr.size() / 2];
+            med = (arr[arr.size() / 2] + arr[arr.size() / 2 - 1]) / 2.0;
         }
     }
-}
-
-bool is_csv_file(string path){
-int index = path.find(".csv");
-if (index == -1)
-return false;
-return true;
 }
 
 vector<string> split_line(string line){
@@ -65,9 +52,6 @@ vector<vector<string>> read_csv_file(string path){
     vector<vector<string>> result;
     string line;
     ifstream myFile(path);
-    if (!myFile.is_open()) throw runtime_error("Could not open file");
-
-    //getline(myFile, line);
 
     while(getline(myFile, line)){
         vector<string> line_model = split_line(line);
