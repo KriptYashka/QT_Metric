@@ -17,12 +17,11 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    QStandardItemModel *csvModel;
 
 private slots:
-    void on_btn_load_clicked();
-    void on_btn_loadfile_clicked();
-    void on_btn_metric_clicked();
+    void on_LoadData_button_clicked();
+    void on_inputPath_clicked();
+    void on_Calculate_metrics_clicked();
     void closeApp();
 
 private:
